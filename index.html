@@ -17,7 +17,6 @@
 <meta name="twitter:image" content="https://panachage.ch/preview.png">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script defer src="/_vercel/insights/script.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=Instrument+Sans:wght@300;400;500&display=swap');
 
@@ -843,6 +842,7 @@ tr:hover td { background: var(--bg2); }
 }
 
 </style>
+<script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
 
@@ -1393,15 +1393,22 @@ function computeCloseCandidates(header) {
     });
   }
 
-  const srcPartyId = G.candidateCols.find(c => c.header === header)?.partyId || '00';
+  // For pre-aggregated communes, candidateCols lacks partyId/name — use G.candidates
+  const candMap = {};
+  G.candidates.forEach(c => { candMap[c.header] = c; });
+  const srcCand = candMap[header] || G.candidateCols.find(c => c.header === header);
+  const srcPartyId = srcCand?.partyId || '00';
 
   return Object.entries(coCount)
-    .map(([h, cnt]) => ({
-      header: h,
-      name: G.candidateCols.find(c => c.header === h)?.name || h,
-      partyId: G.candidateCols.find(c => c.header === h)?.partyId || '00',
-      pct: (cnt / aTotal * 100)
-    }))
+    .map(([h, cnt]) => {
+      const cd = candMap[h] || G.candidateCols.find(c => c.header === h);
+      return {
+        header: h,
+        name: cd?.name || h,
+        partyId: cd?.partyId || '00',
+        pct: (cnt / aTotal * 100)
+      };
+    })
     .filter(x => x.partyId !== srcPartyId)
     .sort((a, b) => b.pct - a.pct)
     .slice(0, 12);
