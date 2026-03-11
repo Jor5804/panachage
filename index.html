@@ -320,6 +320,30 @@ body {
 /* ── GRID ── */
 .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
 .full-col { margin-bottom: 1.5rem; }
+.sieges-table-wrap { overflow-x: auto; }
+.sieges-mob-table {
+  width: 100%; border-collapse: collapse; font-size: .83rem;
+}
+.sieges-mob-table thead tr {
+  border-bottom: 2px solid #d4cfc5; color: var(--ink3); text-align: left;
+}
+.sieges-mob-table th, .sieges-mob-table td {
+  padding: .4rem .65rem; white-space: nowrap;
+}
+.sieges-mob-table tbody tr { border-bottom: 1px solid #ede9e0; }
+.sieges-mob-table .dot {
+  width: 9px; height: 9px; border-radius: 50%;
+  display: inline-block; margin-right: .4rem; vertical-align: middle; flex-shrink: 0;
+}
+.sieges-mob-table .col-right { text-align: right; }
+.sieges-mob-table .col-bar { width: 100px; min-width: 60px; }
+.bar-bg { background: #ede9e0; border-radius: 3px; height: 8px; overflow: hidden; }
+.bar-fg { height: 100%; border-radius: 3px; }
+@media (max-width: 500px) {
+  .col-hide-xs { display: none !important; }
+  .sieges-mob-table th, .sieges-mob-table td { padding: .4rem .5rem; }
+  .sieges-mob-table { font-size: .8rem; }
+}
 @media (max-width: 500px) { .hide-xs { display:none!important } }
 @media (max-width: 800px) {
   .two-col { grid-template-columns: 1fr; }
@@ -1262,12 +1286,10 @@ function buildSiegesCard() {
 
   if (!G.partyIds || !Object.keys(SIEGES).length) { container.innerHTML=''; return; }
   const parties = G.partyIds.filter(p => p !== '00');
-  // Count candidates per party
   const candCount = {};
   parties.forEach(p => { candCount[p] = 0; });
   G.candidates.forEach(c => { if (candCount[c.partyId] !== undefined) candCount[c.partyId]++; });
 
-  // Build rows sorted by sièges desc
   const rows = parties.map(p => ({
     p,
     name: Object.keys(G.listeData).find(l => l.startsWith(p)) || p,
@@ -1277,45 +1299,42 @@ function buildSiegesCard() {
 
   const maxSieges = Math.max(...rows.map(r => r.sieges)) || 1;
 
-  let html = `<div class="card">
-    <div class="card-title">Résultats — Conseil communal 2026 (${TOTAL_SIEGES} sièges)</div>
-    <table class="cand-table" style="width:100%; border-collapse:collapse; font-size:0.82rem;">
+  // ── Responsive card grid on mobile, table on desktop ──
+  let html = `<div class="card" style="padding:0;overflow:hidden">
+    <div style="padding:.7rem 1rem .4rem">
+      <div class="card-title" style="margin:0">Résultats — Conseil communal ${G.year||2026} (${TOTAL_SIEGES} sièges)</div>
+    </div>
+    <div class="sieges-table-wrap">
+    <table class="sieges-mob-table">
       <thead>
-        <tr style="border-bottom:2px solid #d4cfc5; color:var(--ink3); text-align:left;">
-          <th style="padding:0.4rem 0.6rem;">Liste</th>
-          <th style="padding:0.4rem 0.6rem; text-align:right;">Candidats</th>
-          <th style="padding:0.4rem 0.6rem; text-align:right;">Sièges</th>
-          <th style="padding:0.4rem 0.6rem; text-align:right;">% élus</th>
-          <th style="padding:0.4rem 0.6rem; min-width:120px;"></th>
+        <tr>
+          <th>Liste</th>
+          <th class="col-right col-hide-xs">Candidats</th>
+          <th class="col-right">Sièges</th>
+          <th class="col-right col-hide-xs">% élus</th>
+          <th class="col-bar"></th>
         </tr>
       </thead>
       <tbody>`;
 
   rows.forEach(r => {
     const col = PC[r.p] || '#888';
-    const pctElus = r.cands > 0 ? (r.sieges / r.cands * 100).toFixed(0) : '—';
+    const pctElus = r.cands > 0 ? (r.sieges / r.cands * 100).toFixed(0) + '%' : '—';
     const barW = r.sieges > 0 ? (r.sieges / maxSieges * 100).toFixed(1) : 0;
     const shortName = r.name.replace(/^\d{2} /, '');
-    html += `<tr style="border-bottom:1px solid #ede9e0;">
-      <td style="padding:0.45rem 0.6rem; display:flex; align-items:center; gap:0.5rem;">
-        <span style="width:10px;height:10px;border-radius:50%;background:${col};display:inline-block;flex-shrink:0;"></span>
-        ${shortName}
-      </td>
-      <td style="padding:0.45rem 0.6rem; text-align:right; color:var(--ink3);">${r.cands}</td>
-      <td style="padding:0.45rem 0.6rem; text-align:right; font-weight:600; color:${r.sieges>0?col:'var(--ink3)'};">${r.sieges}</td>
-      <td style="padding:0.45rem 0.6rem; text-align:right; color:var(--ink2);">${r.cands>0?pctElus+'%':'—'}</td>
-      <td style="padding:0.45rem 0.6rem;">
-        <div style="background:#ede9e0;border-radius:2px;height:8px;overflow:hidden;">
-          <div style="width:${barW}%;height:100%;background:${col};border-radius:2px;transition:width 0.4s;"></div>
-        </div>
-      </td>
+    html += `<tr>
+      <td><span class="dot" style="background:${col}"></span>${shortName}</td>
+      <td class="col-right col-hide-xs" style="color:var(--ink3)">${r.cands}</td>
+      <td class="col-right" style="font-weight:700;color:${r.sieges>0?col:'var(--ink3)'}">${r.sieges}</td>
+      <td class="col-right col-hide-xs" style="color:var(--ink3)">${pctElus}</td>
+      <td class="col-bar"><div class="bar-bg"><div class="bar-fg" style="width:${barW}%;background:${col}"></div></div></td>
     </tr>`;
   });
 
-  html += `</tbody></table>
-  </div>`;
+  html += `</tbody></table></div></div>`;
   container.innerHTML = html;
 }
+
 
 function buildCandidatsPage() {
   G.candidatesAll = G.candidates;
@@ -1586,7 +1605,7 @@ function buildPanachaPage() {
 function buildTSNE() {
   const canvas = document.getElementById('tsne-canvas');
   const W = canvas.parentElement.offsetWidth || 760;
-  const H = Math.min(600, W < 500 ? W * 0.78 : W * 0.68);
+  const H = Math.min(600, W < 500 ? W * 0.90 : W * 0.68);
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   canvas.width = W * dpr; canvas.height = H * dpr;
   canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
