@@ -1573,7 +1573,9 @@ function openProfile(header) {
     ${closeHTML}
   `;
 
-  document.getElementById('profile-panel').classList.add('open');
+  const panel = document.getElementById('profile-panel');
+  panel.classList.add('open');
+  panel.scrollTop = 0;
 }
 
 function closeProfile() {
@@ -1825,117 +1827,6 @@ function buildTSNE() {
         ctx.clearRect(0, 0, W, H);
         ctx.fillStyle = '#fdfcf8'; ctx.fillRect(0, 0, W, H);
 
-        if (isMob) {
-          // ── MOBILE: party bubble chart ──
-          // Compute party centroids from simulation positions
-          const partyPos = {}, partyVoix = {}, partyName = {};
-          active.forEach((ci,ai) => {
-            const pid = cands[ci].partyId||'00';
-            if (!partyPos[pid]) { partyPos[pid]=[]; partyVoix[pid]=0; }
-            partyPos[pid].push(pts[ai]);
-            partyVoix[pid] += (cands[ci].voixTotales||0);
-            partyName[pid] = cands[ci].liste;
-          });
-          const pids = Object.keys(partyPos);
-          const centroids = {};
-          pids.forEach(pid => {
-            const ps = partyPos[pid];
-            centroids[pid] = [
-              ps.reduce((s,p)=>s+p[0],0)/ps.length,
-              ps.reduce((s,p)=>s+p[1],0)/ps.length
-            ];
-          });
-
-          // Bubble radius: proportional to sqrt(voixTotales), scaled to fit
-          const maxV = Math.max(...pids.map(p=>partyVoix[p]))||1;
-          const maxR = Math.min(W,H)*0.13, minR = Math.min(W,H)*0.052;
-          const bubbleR = pid => minR + (maxR-minR)*Math.sqrt(partyVoix[pid]/maxV);
-
-          // Inter-party edges from coSparse (aggregate)
-          const partyEdges = {};
-          if (G.coSparse && G.candidateHeaders) {
-            const hPid = {};
-            G.candidates.forEach(cd => { hPid[cd.header] = cd.partyId||'00'; });
-            G.candidateHeaders.forEach((h,i) => { if (!hPid[h]) hPid[h]='00'; });
-            Object.entries(G.coSparse).forEach(([key,v]) => {
-              const [a,b] = key.split(',').map(Number);
-              const pa = hPid[G.candidateHeaders[a]]||'00';
-              const pb = hPid[G.candidateHeaders[b]]||'00';
-              if (pa === pb) return;
-              const k = pa<pb ? pa+','+pb : pb+','+pa;
-              partyEdges[k] = (partyEdges[k]||0)+v;
-            });
-          } else if (G.panaMatrix) {
-            Object.entries(G.panaMatrix).forEach(([fromL, toMap]) => {
-              const pa = pids.find(p => (partyName[p]||'').startsWith(p) || fromL.startsWith(p));
-              // use listeData key
-              const paKey = Object.entries(G.listeData).find(([k])=>k===fromL)?.[0];
-              if (!paKey) return;
-              const paSrc = pids.find(p => paKey.startsWith(p));
-              if (!paSrc) return;
-              Object.entries(toMap).forEach(([toL, v]) => {
-                const pbKey = Object.entries(G.listeData).find(([k])=>k===toL)?.[0];
-                if (!pbKey) return;
-                const pbDst = pids.find(p => pbKey.startsWith(p));
-                if (!pbDst || pbDst===paSrc) return;
-                const k = paSrc<pbDst ? paSrc+','+pbDst : pbDst+','+paSrc;
-                partyEdges[k] = (partyEdges[k]||0)+v;
-              });
-            });
-          }
-
-          const maxEdge = Math.max(...Object.values(partyEdges),1);
-
-          // Draw edges
-          Object.entries(partyEdges).forEach(([k,v]) => {
-            const [pa,pb] = k.split(',');
-            if (!centroids[pa]||!centroids[pb]) return;
-            const t = v/maxEdge;
-            if (t < 0.04) return; // skip weak links
-            const [ax,ay] = centroids[pa], [bx,by] = centroids[pb];
-            const grad = ctx.createLinearGradient(ax,ay,bx,by);
-            const alpha = 0.18+t*0.55;
-            const hexA = Math.round(alpha*255).toString(16).padStart(2,'0');
-            grad.addColorStop(0, (PC[pa]||'#888')+hexA);
-            grad.addColorStop(1, (PC[pb]||'#888')+hexA);
-            ctx.strokeStyle = grad;
-            ctx.lineWidth = 1.5+t*9;
-            ctx.lineCap = 'round';
-            ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(bx,by); ctx.stroke();
-          });
-
-          // Draw bubbles
-          pids.forEach(pid => {
-            const [cx,cy] = centroids[pid];
-            const br = bubbleR(pid);
-            const col = PC[pid]||'#888';
-            // Glow
-            const grd = ctx.createRadialGradient(cx-br*0.28,cy-br*0.28,0,cx,cy,br*1.15);
-            grd.addColorStop(0, col+'ee');
-            grd.addColorStop(0.7, col+'cc');
-            grd.addColorStop(1, col+'55');
-            ctx.shadowColor = col+'66'; ctx.shadowBlur = br*0.6;
-            ctx.beginPath(); ctx.arc(cx,cy,br,0,Math.PI*2);
-            ctx.fillStyle = grd; ctx.fill();
-            ctx.shadowColor = 'transparent';
-            ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 2;
-            ctx.stroke();
-
-            // Label inside bubble
-            const short = (partyName[pid]||pid).replace(/^\d{2} /,'');
-            const fs = Math.max(9, Math.min(14, br*0.38));
-            ctx.font = `bold ${fs}px -apple-system,sans-serif`;
-            ctx.fillStyle = '#fff';
-            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            ctx.shadowColor = 'rgba(0,0,0,0.4)'; ctx.shadowBlur = 3;
-            ctx.fillText(short, cx, cy);
-            ctx.shadowColor = 'transparent';
-          });
-
-          return;
-        }
-
-        // ── DESKTOP: individual candidate nodes ──
         ctx.save();
         ctx.translate(vp.ox, vp.oy);
         ctx.scale(vp.s, vp.s);
@@ -1948,8 +1839,8 @@ function buildTSNE() {
           const ai = aIdx[e.i], aj = aIdx[e.j];
           if (ai===undefined || aj===undefined) return;
           const t = e.s / maxS;
-          const alpha = 0.12+t*0.5;
-          const lw = (0.6+t*2.2) / vp.s;
+          const alpha = isMob ? 0.15+t*0.55 : 0.12+t*0.5;
+          const lw = (isMob ? 0.8+t*2.8 : 0.6+t*2.2) / vp.s;
           if (e.cross) {
             const g = ctx.createLinearGradient(pts[ai][0],pts[ai][1],pts[aj][0],pts[aj][1]);
             const a = Math.round(alpha*255).toString(16).padStart(2,'0');
@@ -1981,7 +1872,7 @@ function buildTSNE() {
           if (!grp[pid]) grp[pid] = { xs:[], ys:[], nm:cands[ci].liste };
           grp[pid].xs.push(pts[ai][0]); grp[pid].ys.push(pts[ai][1]);
         });
-        const fs = Math.round(12/vp.s);
+        const fs = Math.round((isMob ? 13 : 12)/vp.s);
         ctx.font = `bold ${fs}px -apple-system,BlinkMacSystemFont,sans-serif`;
         Object.entries(grp).forEach(([pid,g]) => {
           const cx = g.xs.reduce((s,v)=>s+v,0)/g.xs.length;
@@ -2002,6 +1893,7 @@ function buildTSNE() {
         ctx.restore();
       }
 
+      canvas._builtW = W;
       draw();
       canvas._pts = pts;
       canvas._active = active;
@@ -2379,7 +2271,14 @@ function showPage(id) {
   const idx = ['p-ensemble','p-candidats','p-panachage'].indexOf(id);
   document.querySelectorAll('.nav-pill')[idx].classList.add('active');
   closeProfile();
+  window.scrollTo(0, 0);
   if (id === 'p-panachage' && G.panaMatrix) setTimeout(() => buildSankey(), 80);
+  if (id === 'p-ensemble') setTimeout(() => {
+    const canvas = document.getElementById('tsne-canvas');
+    if (!canvas) return;
+    const newW = canvas.parentElement.offsetWidth;
+    if (newW > 0 && Math.abs(newW - (canvas._builtW||0)) > 4) buildTSNE();
+  }, 60);
 }
 
 function destroyChart(id) {
