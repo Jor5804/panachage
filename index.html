@@ -1963,7 +1963,7 @@ function buildTSNE() {
         }, { passive: false });
 
         // ── touchend unique : tap + double-tap fusionnés ──
-        let lastTap = 0;
+        let lastTap = 0, tipTimer = null;
         canvas.addEventListener('touchend', e => {
           const wasPinch = (gestureDir === 'p');
           const now = Date.now();
@@ -1993,8 +1993,10 @@ function buildTSNE() {
                 tip.style.left = Math.min(t.clientX+10, window.innerWidth-190) + 'px';
                 tip.style.top  = Math.max(t.clientY-70, 60) + 'px';
                 tip.innerHTML = `<strong>${escapeHTML(cd.name)}</strong><br><span style="color:${col}">${escapeHTML(cd.liste)}</span><br>${cd.voixTotales.toLocaleString('fr-CH')} voix`;
-                setTimeout(() => { tip.style.display='none'; }, 2800);
+                clearTimeout(tipTimer);
+                tipTimer = setTimeout(() => { tip.style.display='none'; }, 5000);
               } else {
+                clearTimeout(tipTimer);
                 tip.style.display = 'none';
               }
             }
