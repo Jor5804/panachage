@@ -930,7 +930,7 @@ tr:hover td { background: var(--bg2); }
             Un lien quand deux candidats se retrouvent souvent sur les mêmes bulletins panachés.
           </div>
         </div>
-        <canvas id="tsne-canvas" style="width:100%;display:block;touch-action:pan-y"></canvas>
+        <canvas id="tsne-canvas" style="width:100%;display:block;touch-action:none"></canvas>
         <div id="tsne-hint" style="display:none;text-align:center;font-size:.72rem;color:var(--ink3);padding:.35rem .5rem .5rem;line-height:1.4">
           Pincez pour zoomer · glissez pour naviguer · double-tap pour réinitialiser
         </div>
@@ -1907,46 +1907,44 @@ function buildTSNE() {
 
       // ── Mobile: pinch-to-zoom + pan ──
       if (isMob) {
-        const hint = document.getElementById('tsne-hint');
-        if (hint) hint.style.display = 'block';
+        // touch-action:none = JS gère tout (scroll vertical compris via scrollBy)
+        canvas.style.touchAction = 'none';
 
         let touch0 = null, touch1 = null;
         let vpStart = null, pinchDist0 = null, pinchMid0 = null;
+        let lastScrollY = 0, gestureDir = null;
 
         function dist2(a,b) { return Math.hypot(a.clientX-b.clientX, a.clientY-b.clientY); }
         function midPt(a,b,r) {
           return [(a.clientX+b.clientX)/2-r.left, (a.clientY+b.clientY)/2-r.top];
         }
         function clampVp() {
-          // Limit pan so graph doesn't disappear completely
           const maxPan = W * (vp.s - 0.5);
           vp.ox = Math.max(-maxPan, Math.min(maxPan, vp.ox));
           vp.oy = Math.max(-maxPan, Math.min(maxPan, vp.oy));
         }
 
-        let gestureDir = null; // 'h' pan, 'v' scroll, 'p' pinch
-
         canvas.addEventListener('touchstart', e => {
+          e.preventDefault();
           const rect = canvas.getBoundingClientRect();
           touch0 = e.touches[0];
           touch1 = e.touches.length > 1 ? e.touches[1] : null;
           vpStart = { ...vp };
           gestureDir = touch1 ? 'p' : null;
+          lastScrollY = touch0.clientY;
           if (touch1) {
-            // 2 doigts : bloquer le pinch-zoom natif du navigateur
-            canvas.style.touchAction = 'none';
             pinchDist0 = Math.max(dist2(touch0, touch1), 10);
             pinchMid0 = midPt(touch0, touch1, rect);
           }
-        }, { passive: true });
+        }, { passive: false });
 
         canvas.addEventListener('touchmove', e => {
+          e.preventDefault();
           const rect = canvas.getBoundingClientRect();
           const scaleF = W / rect.width;
 
           if (e.touches.length >= 2) {
             // ── Pinch zoom ──
-            e.preventDefault();
             gestureDir = 'p';
             const d = Math.max(dist2(e.touches[0], e.touches[1]), 10);
             const newS = Math.max(0.5, Math.min(5, vpStart.s * (d / pinchDist0)));
@@ -1956,25 +1954,39 @@ function buildTSNE() {
             vp.oy = my - (my - vpStart.oy) * (newS / vpStart.s);
             clampVp(); draw();
           } else if (e.touches.length === 1 && !touch1) {
-            // ── Pan 1 doigt — détecter direction au 1er mouvement ──
+            // ── 1 doigt : détecter direction au 1er mouvement ──
             const dx = e.touches[0].clientX - touch0.clientX;
             const dy = e.touches[0].clientY - touch0.clientY;
             if (!gestureDir && (Math.abs(dx) > 4 || Math.abs(dy) > 4)) {
               gestureDir = Math.abs(dx) > Math.abs(dy) ? 'h' : 'v';
             }
-            if (gestureDir === 'v') return; // laisser le browser scroller
-            e.preventDefault();
-            vp.ox = vpStart.ox + dx * scaleF;
-            vp.oy = vpStart.oy + dy * scaleF;
-            clampVp(); draw();
+            if (gestureDir === 'v') {
+              // Scroll manuel de la page
+              const curY = e.touches[0].clientY;
+              window.scrollBy(0, lastScrollY - curY);
+              lastScrollY = curY;
+            } else if (gestureDir === 'h') {
+              vp.ox = vpStart.ox + dx * scaleF;
+              vp.oy = vpStart.oy + dy * scaleF;
+              clampVp(); draw();
+            }
           }
         }, { passive: false });
 
+        // ── touchend unique : tap + double-tap fusionnés ──
+        let lastTap = 0;
         canvas.addEventListener('touchend', e => {
-          // Rétablir pan-y quand il ne reste plus qu'un doigt ou zéro
-          if (e.touches.length < 2) canvas.style.touchAction = 'pan-y';
-          // Tap to identify (single short tap, no move)
-          if (e.changedTouches.length === 1 && !touch1) {
+          const wasPinch = (gestureDir === 'p');
+          const now = Date.now();
+
+          // Double-tap reset (uniquement si PAS un pinch)
+          if (!wasPinch) {
+            if (now - lastTap < 300) { vp={ox:0,oy:0,s:1}; draw(); }
+            lastTap = now;
+          }
+
+          // Tap to identify (doigt unique, court tap, pas de pinch)
+          if (!wasPinch && e.changedTouches.length === 1 && touch0) {
             const rect = canvas.getBoundingClientRect();
             const scaleF = W / rect.width;
             const t = e.changedTouches[0];
@@ -1998,15 +2010,11 @@ function buildTSNE() {
               }
             }
           }
-          touch0 = null; touch1 = null; pinchDist0 = null;
-        });
 
-        // Double-tap to reset
-        let lastTap = 0;
-        canvas.addEventListener('touchend', e => {
-          const now = Date.now();
-          if (now - lastTap < 300) { vp={ox:0,oy:0,s:1}; draw(); }
-          lastTap = now;
+          // Réinitialiser si plus aucun doigt
+          if (e.touches.length === 0) {
+            touch0 = null; touch1 = null; pinchDist0 = null; gestureDir = null;
+          }
         });
       }
 
