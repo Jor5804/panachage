@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Panachage.ch — Élections communales vaudoises 2026</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPHRleHQgeT0iMjYiIGZvbnQtc2l6ZT0iMjgiPvCfk4o8L3RleHQ+Cjwvc3ZnPg==">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <meta name="description" content="Explorez les alliances électorales et le panachage dans les communes vaudoises.">
 <meta property="og:title" content="Panachage.ch — Analyse du panachage électoral">
 <meta property="og:description" content="Explorez les alliances électorales et le panachage dans les communes vaudoises.">
@@ -1994,7 +1994,7 @@ function buildTSNE() {
                 tip.style.top  = Math.max(t.clientY-70, 60) + 'px';
                 tip.innerHTML = `<strong>${escapeHTML(cd.name)}</strong><br><span style="color:${col}">${escapeHTML(cd.liste)}</span><br>${cd.voixTotales.toLocaleString('fr-CH')} voix`;
                 clearTimeout(tipTimer);
-                tipTimer = setTimeout(() => { tip.style.display='none'; }, 5000);
+                tipTimer = setTimeout(() => { tip.style.display='none'; }, 3000);
               } else {
                 clearTimeout(tipTimer);
                 tip.style.display = 'none';
