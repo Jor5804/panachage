@@ -1931,8 +1931,10 @@ function buildTSNE() {
           touch0 = e.touches[0];
           touch1 = e.touches.length > 1 ? e.touches[1] : null;
           vpStart = { ...vp };
-          gestureDir = touch1 ? 'p' : null; // pinch dès 2 doigts
+          gestureDir = touch1 ? 'p' : null;
           if (touch1) {
+            // 2 doigts : bloquer le pinch-zoom natif du navigateur
+            canvas.style.touchAction = 'none';
             pinchDist0 = Math.max(dist2(touch0, touch1), 10);
             pinchMid0 = midPt(touch0, touch1, rect);
           }
@@ -1969,6 +1971,8 @@ function buildTSNE() {
         }, { passive: false });
 
         canvas.addEventListener('touchend', e => {
+          // Rétablir pan-y quand il ne reste plus qu'un doigt ou zéro
+          if (e.touches.length < 2) canvas.style.touchAction = 'pan-y';
           // Tap to identify (single short tap, no move)
           if (e.changedTouches.length === 1 && !touch1) {
             const rect = canvas.getBoundingClientRect();
