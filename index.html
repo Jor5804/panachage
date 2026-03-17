@@ -1912,7 +1912,7 @@ function buildTSNE() {
 
         let touch0 = null, touch1 = null;
         let vpStart = null, pinchDist0 = null, pinchMid0 = null;
-        let lastScrollY = 0, gestureDir = null;
+        let gestureDir = null;
 
         function dist2(a,b) { return Math.hypot(a.clientX-b.clientX, a.clientY-b.clientY); }
         function midPt(a,b,r) {
@@ -1931,7 +1931,6 @@ function buildTSNE() {
           touch1 = e.touches.length > 1 ? e.touches[1] : null;
           vpStart = { ...vp };
           gestureDir = touch1 ? 'p' : null;
-          lastScrollY = touch0.clientY;
           if (touch1) {
             pinchDist0 = Math.max(dist2(touch0, touch1), 10);
             pinchMid0 = midPt(touch0, touch1, rect);
@@ -1954,22 +1953,12 @@ function buildTSNE() {
             vp.oy = my - (my - vpStart.oy) * (newS / vpStart.s);
             clampVp(); draw();
           } else if (e.touches.length === 1 && !touch1) {
-            // ── 1 doigt : détecter direction au 1er mouvement ──
+            // ── 1 doigt : pan libre dans toutes les directions ──
             const dx = e.touches[0].clientX - touch0.clientX;
             const dy = e.touches[0].clientY - touch0.clientY;
-            if (!gestureDir && (Math.abs(dx) > 4 || Math.abs(dy) > 4)) {
-              gestureDir = Math.abs(dx) > Math.abs(dy) ? 'h' : 'v';
-            }
-            if (gestureDir === 'v') {
-              // Scroll manuel de la page
-              const curY = e.touches[0].clientY;
-              window.scrollBy(0, lastScrollY - curY);
-              lastScrollY = curY;
-            } else if (gestureDir === 'h') {
-              vp.ox = vpStart.ox + dx * scaleF;
-              vp.oy = vpStart.oy + dy * scaleF;
-              clampVp(); draw();
-            }
+            vp.ox = vpStart.ox + dx * scaleF;
+            vp.oy = vpStart.oy + dy * scaleF;
+            clampVp(); draw();
           }
         }, { passive: false });
 
