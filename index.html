@@ -203,7 +203,7 @@ body {
   position: sticky;
   top: 0;
   z-index: 200;
-  height: 56px;
+  height: 40px;
 }
 
 .header-title {
@@ -350,15 +350,27 @@ body {
 }
 @media (max-width: 600px) {
   .app-header { padding: 0 .75rem; height: auto; min-height: 56px; }
-  .nav-pills { gap: .15rem; }
-  .nav-pill { padding: .32rem .5rem; font-size: .68rem; }
+  .header-title { font-size: .82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 55vw; }
+  .nav-pills { gap: .15rem; flex-shrink: 0; }
+  .nav-pill { padding: .32rem .45rem; font-size: .65rem; }
   .page-inner { padding: 1rem .75rem; }
   .kpi-strip { grid-template-columns: 1fr 1fr; }
   .profile-panel { width: 100% !important; top: 0 !important; height: 100dvh !important; z-index: 300 !important; }
   .profile-panel .panel-header { position: sticky; top: 0; background: #1a1814; z-index: 2; }
   .panel-header { padding: .75rem 1rem; }
-  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .table-wrap table { min-width: 500px; font-size: .78rem; }
+  /* Table candidats : masque les colonnes secondaires */
+  .table-wrap { overflow-x: visible; }
+  .table-wrap table { min-width: 0; width: 100%; font-size: .78rem; table-layout: fixed; }
+  .table-wrap table thead th:nth-child(1),
+  .table-wrap table tbody td:nth-child(1) { display: none; }
+  .table-wrap table thead th:nth-child(n+5),
+  .table-wrap table tbody td:nth-child(n+5) { display: none; }
+  .table-wrap table th:nth-child(2) { width: auto; }
+  .table-wrap table th:nth-child(3) { width: 72px; }
+  .table-wrap table th:nth-child(4) { width: 56px; text-align: right; font-size: .6rem; }
+  .table-wrap table td:nth-child(4) { text-align: right; padding-right: .5rem; }
+  .search-row { flex-direction: column; gap: .5rem; }
+  .search-row select { max-width: 100% !important; }
   .table-wrap table th:nth-child(5), .table-wrap table td:nth-child(5),
   .table-wrap table th:nth-child(6), .table-wrap table td:nth-child(6),
   .table-wrap table th:nth-child(7), .table-wrap table td:nth-child(7) { display: none; }
@@ -866,6 +878,100 @@ tr:hover td { background: var(--bg2); }
   .ptab-flow-name { font-size:.72rem; }
 }
 
+/* ── MUNICIPALITÉ ── */
+#mun-screen { display:none; flex-direction:column; height:100vh; overflow:hidden; }
+.mun-layout {
+  display:grid;
+  grid-template-columns: 1fr 380px;
+  flex:1;
+  min-height:0;
+  overflow:hidden;
+}
+.mun-graph-wrap {
+  position:relative;
+  background:var(--white);
+  border-right:1px solid var(--border);
+  overflow:hidden;
+}
+#mun-canvas { display:block; width:100%; height:100%; cursor:pointer; }
+.mun-results-panel {
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  min-height:0;
+  background:var(--bg);
+}
+.mun-results-header {
+  padding:.75rem 1rem .5rem;
+  font-size:.68rem;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.07em;
+  color:var(--ink3);
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.mun-back-btn {
+  background:none;
+  border:1px solid var(--border);
+  border-radius:4px;
+  padding:.15rem .5rem;
+  font-size:.7rem;
+  font-family:inherit;
+  cursor:pointer;
+  color:var(--ink2);
+}
+.mun-back-btn:hover { background:var(--bg2); }
+#mun-list { overflow-y:auto; flex:1; min-height:0; }
+.mun-cand-row {
+  display:flex;
+  align-items:center;
+  gap:.65rem;
+  padding:.55rem 1rem;
+  border-bottom:1px solid var(--border);
+  cursor:pointer;
+  transition:background .12s;
+}
+.mun-cand-row:hover { background:var(--bg2); }
+.mun-cand-row.selected { background:#e8f0ff; }
+.mun-cand-row.highlighted { background:#f0f8ff; }
+.mun-rank {
+  font-size:.72rem;
+  font-weight:700;
+  color:var(--ink3);
+  width:18px;
+  flex-shrink:0;
+  text-align:right;
+}
+.mun-dot { width:10px;height:10px;border-radius:50%;flex-shrink:0; }
+.mun-cand-info { flex:1; min-width:0; }
+.mun-cand-name { font-size:.82rem;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.mun-cand-party { font-size:.7rem;color:var(--ink3); }
+.mun-cand-right { text-align:right;flex-shrink:0; }
+.mun-voix { font-size:.82rem;font-weight:700;color:var(--ink); }
+.mun-elu { font-size:.62rem;font-weight:700;background:#1a7a4a;color:#fff;padding:.1rem .3rem;border-radius:3px;margin-left:.3rem;vertical-align:middle; }
+.mun-co-val { font-size:.7rem;color:var(--ink3); }
+.mun-section-sep {
+  padding:.4rem 1rem .2rem;
+  font-size:.65rem;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.07em;
+  color:var(--ink3);
+  background:var(--bg2);
+  border-bottom:1px solid var(--border);
+}
+@media (max-width:700px) {
+  #mun-screen { height:auto; min-height:100dvh; overflow:visible; }
+  .mun-layout { grid-template-columns:1fr; grid-template-rows:50vh 1fr; height:auto; overflow:visible; }
+  .mun-graph-wrap { border-right:none; border-bottom:1px solid var(--border); }
+  .mun-results-panel { overflow:visible; min-height:0; }
+  #mun-list { overflow-y:visible; max-height:none; }
+}
+
 </style>
 <script defer src="/_vercel/insights/script.js"></script>
 </head>
@@ -881,7 +987,10 @@ tr:hover td { background: var(--bg2); }
       <p class="wc-tagline">Explorez les élections communales vaudoises.<br>Candidats, flux de panachage, proximité électorale.</p>
 
     </header>
-    <div class="wc-section-label">Canton de Vaud — Élections 2026 — Choisissez une commune</div>
+    <div class="wc-section-label">Municipalité — Élections 2026</div>
+    <div class="wc-grid">
+<div class="wc-card wc-card--active" onclick="startMunicipale('Lausanne 2026 — Municipalité')"><div class="wc-card-name">Lausanne</div><div class="wc-card-sub">Municipalité · 2026</div><div class="wc-card-arrow">→</div></div><div class="wc-card wc-card--active" onclick="startMunicipale('Yverdon-les-Bains 2026 — Municipalité')"><div class="wc-card-name">Yverdon-les-Bains</div><div class="wc-card-sub">Municipalité · 2026</div><div class="wc-card-arrow">→</div></div><div class="wc-card wc-card--active" onclick="startMunicipale('Vevey 2026 — Municipalité')"><div class="wc-card-name">Vevey</div><div class="wc-card-sub">Municipalité · 2026</div><div class="wc-card-arrow">→</div></div>    </div>
+    <div class="wc-section-label" style="margin-top:1.5rem">Conseil communal — Élections 2026</div>
     <div class="wc-grid">
 <div class="wc-card wc-card--active" onclick="startApp('Lausanne 2026 — Conseil communal')"><div class="wc-card-name">Lausanne</div><div class="wc-card-sub">Conseil communal · 2026</div><div class="wc-card-arrow">→</div></div><div class="wc-card wc-card--active" onclick="startApp('Yverdon-les-Bains 2026 — Conseil communal')"><div class="wc-card-name">Yverdon-les-Bains</div><div class="wc-card-sub">Conseil communal · 2026</div><div class="wc-card-arrow">→</div></div><div class="wc-card wc-card--active" onclick="startApp('Montreux 2026 — Conseil communal')"><div class="wc-card-name">Montreux</div><div class="wc-card-sub">Conseil communal · 2026</div><div class="wc-card-arrow">→</div></div><div class="wc-card wc-card--active" onclick="startApp('Renens 2026 — Conseil communal')"><div class="wc-card-name">Renens</div><div class="wc-card-sub">Conseil communal · 2026</div><div class="wc-card-arrow">→</div></div><div class="wc-card wc-card--active" onclick="startApp('Nyon 2026 — Conseil communal')"><div class="wc-card-name">Nyon</div><div class="wc-card-sub">Conseil communal · 2026</div><div class="wc-card-arrow">→</div></div><div class="wc-card wc-card--active" onclick="startApp('Vevey 2026 — Conseil communal')"><div class="wc-card-name">Vevey</div><div class="wc-card-sub">Conseil communal · 2026</div><div class="wc-card-arrow">→</div></div><div class="wc-card wc-card--active" onclick="startApp('Pully 2026 — Conseil communal')"><div class="wc-card-name">Pully</div><div class="wc-card-sub">Conseil communal · 2026</div><div class="wc-card-arrow">→</div></div><div class="wc-card wc-card--active" onclick="startApp('Morges 2026 — Conseil communal')"><div class="wc-card-name">Morges</div><div class="wc-card-sub">Conseil communal · 2026</div><div class="wc-card-arrow">→</div></div>    </div>
     <footer class="wc-footer">
@@ -894,6 +1003,28 @@ tr:hover td { background: var(--bg2); }
 <div id="loading-screen" style="display:none; min-height:100vh; align-items:center; justify-content:center; flex-direction:column; gap:1rem;">
   <div class="loader"></div>
   <p style="color:var(--ink3); font-size:0.875rem;">Analyse en cours…</p>
+</div>
+
+<!-- MUNICIPALITÉ -->
+<div id="mun-screen">
+  <header class="app-header">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem">
+      <div class="header-title" id="mun-title" style="font-size:.95rem">—</div>
+      <button onclick="showWelcome()" style="padding:.25rem .6rem;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:rgba(255,255,255,.8);font-family:inherit;font-size:.72rem;border-radius:4px;cursor:pointer;white-space:nowrap;flex-shrink:0">← Communes</button>
+    </div>
+  </header>
+  <div class="mun-layout">
+    <div class="mun-graph-wrap">
+      <canvas id="mun-canvas"></canvas>
+    </div>
+    <div class="mun-results-panel">
+      <div class="mun-results-header">
+        <span id="mun-results-label">Résultats — cliquez un candidat</span>
+        <button class="mun-back-btn" id="mun-back-btn" style="display:none" onclick="munShowResults()">← Résultats</button>
+      </div>
+      <div id="mun-list"></div>
+    </div>
+  </div>
 </div>
 
 <!-- APP -->
@@ -977,7 +1108,7 @@ tr:hover td { background: var(--bg2); }
               <th>#</th>
               <th>Candidat</th>
               <th>Liste</th>
-              <th>Voix totales</th>
+              <th>Voix<span class="hide-xs"> totales</span></th>
               <th>Voix propres</th>
               <th>Biffages</th>
               <th>Cumuls</th>
@@ -1004,7 +1135,7 @@ tr:hover td { background: var(--bg2); }
 
 </div>
 
-<script src="data.js?v=1773794777"></script>
+<script src="data.js?v=1774145000"></script>
 <script>
 
 
@@ -2054,12 +2185,26 @@ function showWelcome() {
   document.getElementById('welcome-screen').style.display = 'flex';
   const app = document.getElementById('app');
   if (app) app.style.display = 'none';
+  const mun = document.getElementById('mun-screen');
+  if (mun) mun.style.display = 'none';
 }
 function startApp(name) {
   document.getElementById('welcome-screen').style.display = 'none';
   if (typeof PRELOADED !== 'undefined' && PRELOADED[name]) {
     loadPreloaded(name);
   }
+}
+function startMunicipale(name) {
+  document.getElementById('welcome-screen').style.display = 'none';
+  const d = PRELOADED[name];
+  if (!d) return;
+  MUN = d;
+  munNodes = [];
+  munSelectedIdx = null;
+  document.getElementById('mun-title').textContent = name;
+  document.getElementById('mun-screen').style.display = 'flex';
+  munShowResults();
+  setTimeout(buildMunGraph, 60);
 }
 
 // ── TABLEAU PANACHAGE ──
@@ -2340,6 +2485,396 @@ function showError(msg) {
   document.getElementById('welcome-screen').style.display = 'none';
   document.getElementById('app').style.display = 'none';
   document.getElementById('upload-screen').style.display = 'flex';
+}
+
+// ══════════════════════════════════════════════════════
+// MUNICIPALITÉ — force-directed proximity + results
+// ══════════════════════════════════════════════════════
+let MUN = null;
+let munSelectedIdx = null;
+let munNodes = [];
+
+// Political zone anchors (x/y in 0‑1 relative coords, left=gauche → right=droite)
+const MUN_ZONES = {
+  // ── Lausanne ──
+  'EàG':              { x: 0.09, y: 0.44, color: '#9020c8', label: 'EàG' },
+  'PS, Verts, POP':   { x: 0.30, y: 0.38, color: '#e03030', label: 'PS · Verts · POP' },
+  "Vert'lib.-Centre": { x: 0.52, y: 0.30, color: '#28b050', label: "Vert'lib.-Centre" },
+  'PLR':              { x: 0.71, y: 0.44, color: '#1055c0', label: 'PLR' },
+  'UDC':              { x: 0.88, y: 0.44, color: '#708090', label: 'UDC' },
+  'SDN':              { x: 0.80, y: 0.72, color: '#2080d0', label: 'SDN' },
+  'BSEP':             { x: 0.60, y: 0.80, color: '#c07040', label: 'BSEP' },
+  'OK':               { x: 0.38, y: 0.78, color: '#e06080', label: 'OK' },
+  // ── Yverdon ──
+  'S&E':                  { x: 0.09, y: 0.44, color: '#c01848', label: 'S&E' },
+  'PS & Verts':           { x: 0.30, y: 0.38, color: '#e03030', label: 'PS & Verts' },
+  'Yverdon Demain':       { x: 0.52, y: 0.68, color: '#e07820', label: 'Yverdon Demain' },
+  'Entente Yverdonnoise': { x: 0.75, y: 0.38, color: '#2080d0', label: 'Entente Yverdonnoise' },
+  'Yverdon V. inclusive': { x: 0.52, y: 0.85, color: '#708090', label: 'Yverdon V. inclusive' },
+  // ── Vevey ──
+  'EAV':        { x: 0.70, y: 0.72, color: '#c8b000', label: 'EAV' },
+  'da.':        { x: 0.28, y: 0.65, color: '#9020c8', label: 'da.' },
+  'Verts et PS':{ x: 0.32, y: 0.30, color: '#e03030', label: 'Verts et PS' },
+  'VL':         { x: 0.62, y: 0.28, color: '#2080d0', label: 'VL' },
+  'LCVL':       { x: 0.60, y: 0.68, color: '#28b050', label: 'LCVL' },
+};
+
+function munShowResults() {
+  const cands = MUN.candidates;
+  const label = document.getElementById('mun-results-label');
+  const backBtn = document.getElementById('mun-back-btn');
+  label.textContent = `1er tour · ${cands.length} candidats · ${MUN.sieges} sièges`;
+  backBtn.style.display = 'none';
+  munSelectedIdx = null;
+  munDrawGraph();
+
+  const list = document.getElementById('mun-list');
+  list.innerHTML = '';
+
+  // 1er tour info banner
+  const banner = document.createElement('div');
+  banner.style.cssText = 'padding:.45rem 1rem;background:#fff8e6;border-bottom:1px solid #f0d070;font-size:.72rem;color:#7a5500;';
+  banner.innerHTML = `Majorité absolue : <strong>${MUN.absMajority.toLocaleString('fr-CH')}</strong> voix — Aucun·e élu·e au 1er tour`;
+  list.appendChild(banner);
+
+  cands.forEach((c, i) => {
+    const row = document.createElement('div');
+    row.className = 'mun-cand-row';
+    row.dataset.idx = i;
+    row.innerHTML = `
+      <div class="mun-rank">${c.rank}</div>
+      <div class="mun-dot" style="background:${c.color}"></div>
+      <div class="mun-cand-info">
+        <div class="mun-cand-name">${c.name}</div>
+        <div class="mun-cand-party">${c.party}</div>
+      </div>
+      <div class="mun-cand-right">
+        <div class="mun-voix">${c.voix.toLocaleString('fr-CH')}</div>
+        <div class="mun-co-val">${c.pct}%</div>
+      </div>`;
+    row.addEventListener('click', () => munSelectCandidate(i));
+    list.appendChild(row);
+  });
+}
+
+function munSelectCandidate(idx) {
+  munSelectedIdx = idx;
+  document.getElementById('mun-list').scrollTop = 0;
+  const c = MUN.candidates[idx];
+  const co = MUN.coMatrix[idx];
+
+  const coRanked = MUN.candidates
+    .map((d, j) => ({ j, name: d.name, party: d.party, color: d.color, count: co[j] }))
+    .filter(x => x.j !== idx)
+    .sort((a, b) => b.count - a.count);
+
+  document.getElementById('mun-results-label').textContent = `Bulletins communs avec ${c.name}`;
+  document.getElementById('mun-back-btn').style.display = '';
+
+  const list = document.getElementById('mun-list');
+  list.innerHTML = '';
+
+  // Selected candidate header
+  const hdr = document.createElement('div');
+  hdr.style.cssText = 'padding:.6rem 1rem;border-bottom:2px solid var(--border);display:flex;align-items:center;gap:.6rem;';
+  hdr.innerHTML = `<div style="width:12px;height:12px;border-radius:50%;background:${c.color};flex-shrink:0"></div>
+    <div><div style="font-size:.9rem;font-weight:800;color:var(--ink)">${c.name}</div>
+    <div style="font-size:.72rem;color:var(--ink3)">${c.party} · ${c.voix.toLocaleString('fr-CH')} voix (${c.pct}%)</div></div>`;
+  list.appendChild(hdr);
+
+  coRanked.forEach(x => {
+    const row = document.createElement('div');
+    row.className = 'mun-cand-row';
+    const pct = (x.count / MUN.totalBulletins * 100).toFixed(1);
+    row.innerHTML = `
+      <div class="mun-dot" style="background:${x.color}"></div>
+      <div class="mun-cand-info">
+        <div class="mun-cand-name">${x.name}</div>
+        <div class="mun-cand-party">${x.party}</div>
+      </div>
+      <div class="mun-cand-right">
+        <div class="mun-voix">${x.count.toLocaleString('fr-CH')}</div>
+        <div class="mun-co-val">${pct}%</div>
+      </div>`;
+    row.addEventListener('click', () => munSelectCandidate(x.j));
+    list.appendChild(row);
+  });
+
+  munDrawGraph();
+}
+
+function buildMunGraph() {
+  const canvas = document.getElementById('mun-canvas');
+  const wrap = canvas.parentElement;
+  canvas.width  = wrap.clientWidth  * devicePixelRatio;
+  canvas.height = wrap.clientHeight * devicePixelRatio;
+  const W = canvas.width, H = canvas.height;
+  const N = MUN.candidates.length;
+
+  // Count candidates per party for zone sizing
+  const partyCounts = {};
+  MUN.candidates.forEach(c => { partyCounts[c.party] = (partyCounts[c.party] || 0) + 1; });
+
+  // Générateur pseudo-aléatoire à graine fixe (mulberry32) → layout stable
+  let _seed = 42;
+  const seededRand = () => {
+    _seed |= 0; _seed = _seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(_seed ^ _seed >>> 15, 1 | _seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+
+  // Init depuis les zones MUN_ZONES
+  munNodes = MUN.candidates.map(c => {
+    const z = MUN_ZONES[c.party] || { x: 0.5, y: 0.5 };
+    const jitter = 30 * devicePixelRatio;
+    return {
+      x: z.x * W + (seededRand() - 0.5) * jitter,
+      y: z.y * H + (seededRand() - 0.5) * jitter,
+      vx: 0, vy: 0, c
+    };
+  });
+
+  let maxCo = 0;
+  for (let i = 0; i < N; i++)
+    for (let j = 0; j < N; j++)
+      if (MUN.coMatrix[i][j] > maxCo) maxCo = MUN.coMatrix[i][j];
+
+  // Rayons précalculés pour détection de collision
+  const cands0 = MUN.candidates;
+  const maxV0 = cands0[0].voix, minV0 = cands0[cands0.length-1].voix;
+  const radii = munNodes.map(n => (7 + (n.c.voix - minV0) / (maxV0 - minV0 + 1) * 13) * devicePixelRatio);
+
+  const pad       = 50 * devicePixelRatio;
+  const S         = Math.min(W, H);
+  const repK      = S * 300 / N;   // normalisé par nombre de candidats
+  const gravK     = 0.003;   // gravité vers le centre
+  const zoneK     = 0.008;   // ancrage vers zone de parti
+  const intraK    = 0.020;   // ressort intra-parti
+  const intraRest = S * 0.22;
+  const damp      = 0.82;
+  const cx = W / 2, cy = H / 2;
+
+  for (let step = 0; step < 600; step++) {
+    // 1. Gravité centrale
+    for (const n of munNodes) {
+      n.vx += (cx - n.x) * gravK;
+      n.vy += (cy - n.y) * gravK;
+    }
+    // 2. Ancrage vers zone de parti
+    for (const n of munNodes) {
+      const z = MUN_ZONES[n.c.party];
+      if (!z) continue;
+      n.vx += (z.x * W - n.x) * zoneK;
+      n.vy += (z.y * H - n.y) * zoneK;
+    }
+    // 3. Répulsion entre tous les nœuds
+    for (let i = 0; i < N; i++) {
+      for (let j = i + 1; j < N; j++) {
+        const dx = munNodes[j].x - munNodes[i].x;
+        const dy = munNodes[j].y - munNodes[i].y;
+        const d2 = dx*dx + dy*dy + 1;
+        const d  = Math.sqrt(d2);
+        const f  = repK / d2;
+        const fx = f * dx / d, fy = f * dy / d;
+        munNodes[i].vx -= fx; munNodes[i].vy -= fy;
+        munNodes[j].vx += fx; munNodes[j].vy += fy;
+      }
+    }
+    // 4. Ressort intra-parti
+    for (let i = 0; i < N; i++) {
+      for (let j = i + 1; j < N; j++) {
+        if (munNodes[i].c.party !== munNodes[j].c.party) continue;
+        const dx = munNodes[j].x - munNodes[i].x;
+        const dy = munNodes[j].y - munNodes[i].y;
+        const d  = Math.sqrt(dx*dx + dy*dy) + 0.01;
+        const f  = intraK * (d - intraRest);
+        const fx = f * dx / d, fy = f * dy / d;
+        munNodes[i].vx += fx; munNodes[i].vy += fy;
+        munNodes[j].vx -= fx; munNodes[j].vy -= fy;
+      }
+    }
+    // 5. Attraction inter-nœuds par co-occurrence
+    const coK = 0.8;
+    for (let i = 0; i < N; i++) {
+      for (let j = i + 1; j < N; j++) {
+        const w = MUN.coMatrix[i][j] / maxCo;
+        if (w < 0.25) continue;
+        const dx = munNodes[j].x - munNodes[i].x;
+        const dy = munNodes[j].y - munNodes[i].y;
+        const d  = Math.sqrt(dx*dx + dy*dy) + 0.01;
+        const f  = coK * w;
+        const fx = f * dx / d, fy = f * dy / d;
+        munNodes[i].vx += fx; munNodes[i].vy += fy;
+        munNodes[j].vx -= fx; munNodes[j].vy -= fy;
+      }
+    }
+    // 6. Collision — empêche le chevauchement des nœuds
+    for (let i = 0; i < N; i++) {
+      for (let j = i + 1; j < N; j++) {
+        const dx = munNodes[j].x - munNodes[i].x;
+        const dy = munNodes[j].y - munNodes[i].y;
+        const d  = Math.sqrt(dx*dx + dy*dy) + 0.01;
+        const minDist = radii[i] + radii[j] + 5 * devicePixelRatio;
+        if (d < minDist) {
+          const push = (minDist - d) / d * 0.55;
+          munNodes[i].vx -= dx * push; munNodes[i].vy -= dy * push;
+          munNodes[j].vx += dx * push; munNodes[j].vy += dy * push;
+        }
+      }
+    }
+    // 7. Amortissement + clampage
+    for (const n of munNodes) {
+      n.vx *= damp; n.vy *= damp;
+      n.x += n.vx;  n.y += n.vy;
+      if (n.x < pad)     { n.x = pad;     n.vx *= -0.2; }
+      if (n.x > W - pad) { n.x = W - pad; n.vx *= -0.2; }
+      if (n.y < pad)     { n.y = pad;     n.vy *= -0.2; }
+      if (n.y > H - pad) { n.y = H - pad; n.vy *= -0.2; }
+    }
+  }
+
+  canvas.onclick = function(e) {
+    const rect = canvas.getBoundingClientRect();
+    const dpr = devicePixelRatio;
+    const mx = (e.clientX - rect.left) * dpr;
+    const my = (e.clientY - rect.top)  * dpr;
+    let best = -1, bestD = Infinity;
+    munNodes.forEach((n, i) => {
+      const d = Math.hypot(n.x - mx, n.y - my);
+      if (d < munNodeRadius(n.c) * dpr + 10 * dpr && d < bestD) { bestD = d; best = i; }
+    });
+    if (best >= 0) {
+      munSelectCandidate(best);
+    } else {
+      munSelectedIdx = null;
+      munShowResults();
+      munDrawGraph();
+    }
+  };
+
+  munDrawGraph();
+}
+
+function munNodeRadius(c) {
+  const cands = MUN.candidates;
+  const maxV = cands[0].voix, minV = cands[cands.length-1].voix;
+  return 7 + (c.voix - minV) / (maxV - minV + 1) * 13;
+}
+
+function munDrawGraph() {
+  const canvas = document.getElementById('mun-canvas');
+  if (!canvas || munNodes.length === 0) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = devicePixelRatio;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const N = MUN.candidates.length;
+  let maxCo = 0;
+  for (let i = 0; i < N; i++)
+    for (let j = 0; j < N; j++)
+      if (MUN.coMatrix[i][j] > maxCo) maxCo = MUN.coMatrix[i][j];
+
+  const sel = munSelectedIdx;
+  const coRow = sel !== null ? MUN.coMatrix[sel] : null;
+  const maxCoSel = coRow ? Math.max(...coRow.filter((_, j) => j !== sel)) + 1 : 1;
+
+  // Zone labels drawn later (after nodes) — see bottom of function
+
+  // ── Edges ──
+  for (let i = 0; i < N; i++) {
+    for (let j = i + 1; j < N; j++) {
+      const w = MUN.coMatrix[i][j] / maxCo;
+      if (w < 0.22) continue;
+      let alpha, lineW;
+      if (sel !== null) {
+        if (i === sel || j === sel) {
+          const coW = coRow[i === sel ? j : i] / maxCoSel;
+          alpha = 0.12 + coW * 0.7;
+          lineW = (0.8 + coW * 3.5) * dpr;
+        } else { alpha = 0.03; lineW = 0.4 * dpr; }
+      } else {
+        alpha = 0.04 + w * 0.20; lineW = (0.3 + w * 2.0) * dpr;
+      }
+      ctx.beginPath();
+      ctx.moveTo(munNodes[i].x, munNodes[i].y);
+      ctx.lineTo(munNodes[j].x, munNodes[j].y);
+      ctx.strokeStyle = `rgba(60,60,60,${alpha})`;
+      ctx.lineWidth = lineW;
+      ctx.stroke();
+    }
+  }
+
+  // ── Nodes ──
+  munNodes.forEach((n, i) => {
+    const r = munNodeRadius(n.c) * dpr;
+    const isSelected = i === sel;
+    const isDimmed   = sel !== null && !isSelected;
+
+    if (isSelected) {
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, r + 5 * dpr, 0, 2 * Math.PI);
+      ctx.fillStyle = 'rgba(0,87,168,0.20)';
+      ctx.fill();
+    }
+
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, r, 0, 2 * Math.PI);
+    ctx.fillStyle = n.c.color + (isDimmed ? '50' : 'ff');
+    ctx.fill();
+  });
+
+  // ── Labels candidats ──
+  ctx.textAlign = 'center';
+  munNodes.forEach((n, i) => {
+    const r = munNodeRadius(n.c) * dpr;
+    const isDimmed = sel !== null && i !== sel;
+    const label = n.c.name.split(' ')[0];
+    const lx = n.x, ly = n.y + r + 10 * dpr;
+    ctx.font = `600 ${10.5 * dpr}px 'Instrument Sans', sans-serif`;
+    ctx.strokeStyle = `rgba(245,242,235,${isDimmed ? 0.5 : 0.92})`;
+    ctx.lineWidth   = 3.5 * dpr;
+    ctx.lineJoin    = 'round';
+    ctx.strokeText(label, lx, ly);
+    ctx.fillStyle = `rgba(26,24,20,${isDimmed ? 0.22 : 0.88})`;
+    ctx.fillText(label, lx, ly);
+  });
+
+  // ── Labels de parti (dessinés en dernier, sur le centroïde réel des nœuds) ──
+  if (sel === null) {
+    const partyCentroids = {};
+    munNodes.forEach(n => {
+      const p = n.c.party;
+      if (!partyCentroids[p]) partyCentroids[p] = { sx: 0, sy: 0, count: 0, maxR: 0 };
+      partyCentroids[p].sx += n.x;
+      partyCentroids[p].sy += n.y;
+      partyCentroids[p].count++;
+      partyCentroids[p].maxR = Math.max(partyCentroids[p].maxR, munNodeRadius(n.c) * dpr);
+    });
+    ctx.textAlign = 'center';
+    Object.entries(partyCentroids).forEach(([party, g]) => {
+      const z = MUN_ZONES[party];
+      if (!z) return;
+      const cx2 = g.sx / g.count;
+      // find the lowest node y in this party to place label below
+      let maxY = -Infinity;
+      // include candidate label height (~24px) so party label clears the name
+      munNodes.forEach(n => { if (n.c.party === party) maxY = Math.max(maxY, n.y + munNodeRadius(n.c) * dpr + 24 * dpr); });
+      const labelY = maxY + 14 * dpr;
+      const hx = z.color.replace('#','');
+      const [rr,gg,bb] = [parseInt(hx.slice(0,2),16), parseInt(hx.slice(2,4),16), parseInt(hx.slice(4,6),16)];
+      ctx.font = `700 ${11 * dpr}px 'Instrument Sans', sans-serif`;
+      // fond blanc semi-transparent pour lisibilité
+      const metrics = ctx.measureText(z.label);
+      const tw = metrics.width + 10 * dpr;
+      const th = 14 * dpr;
+      ctx.fillStyle = 'rgba(245,242,235,0.82)';
+      ctx.fillRect(cx2 - tw/2, labelY - th + 2*dpr, tw, th);
+      ctx.fillStyle = `rgba(${rr},${gg},${bb},0.90)`;
+      ctx.fillText(z.label, cx2, labelY);
+    });
+  }
 }
 </script>
 
