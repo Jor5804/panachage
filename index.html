@@ -1911,6 +1911,9 @@ function buildTSNE() {
         return [ax*0.7+(rng()-0.5)*0.08, (rng()-0.5)*0.5];
       });
       const vel=active.map(()=>[0,0]);
+      const nParties=new Set(active.map(ci=>cands[ci].partyId)).size;
+      const repK = nParties <= 2 ? 0.002 : 0.009;
+      const axisStr0 = nParties <= 2 ? 0.04 : 0.015;
 
       for (let iter=0; iter<400; iter++) {
         const f=active.map(()=>[0,0]);
@@ -1920,7 +1923,7 @@ function buildTSNE() {
         for (let ai=0;ai<na;ai++) for (let aj=ai+1;aj<na;aj++) {
           const dx=pos[ai][0]-pos[aj][0], dy=pos[ai][1]-pos[aj][1];
           const d2=dx*dx+dy*dy+0.0001, d=Math.sqrt(d2);
-          const mag=0.009/d2;
+          const mag=repK/d2;
           f[ai][0]+=mag*dx/d; f[ai][1]+=mag*dy/d;
           f[aj][0]-=mag*dx/d; f[aj][1]-=mag*dy/d;
         }
@@ -1931,8 +1934,17 @@ function buildTSNE() {
           if(ai===undefined||aj===undefined) return;
           const dx=pos[ai][0]-pos[aj][0], dy=pos[ai][1]-pos[aj][1];
           const d=Math.sqrt(dx*dx+dy*dy)+0.001;
-          const target=e.cross ? 0.22+(1-e.s/maxS)*0.12 : 0.05+(1-e.s/maxS)*0.06;
-          const k=e.cross ? 0.05 : 0.15;
+          let target, k;
+          if (e.cross) {
+            const axI = AXIS[cands[active[ai]].partyId] || 0;
+            const axJ = AXIS[cands[active[aj]].partyId] || 0;
+            const axisDiff = Math.abs(axI - axJ);
+            target = Math.max(0.22, axisDiff * 0.7) + (1-e.s/maxS)*0.12;
+            k = 0.05;
+          } else {
+            target = 0.05+(1-e.s/maxS)*0.06;
+            k = 0.15;
+          }
           const mag=(d-target)*k;
           f[ai][0]-=mag*dx/d; f[ai][1]-=mag*dy/d;
           f[aj][0]+=mag*dx/d; f[aj][1]+=mag*dy/d;
@@ -1940,7 +1952,7 @@ function buildTSNE() {
 
         // Soft political axis constraint: nudge x toward party axis position
         // (weaker over time so simulation can spread naturally)
-        const axisStrength = 0.015 * Math.max(0.3, 1 - iter/200);
+        const axisStrength = axisStr0 * Math.max(0.3, 1 - iter/200);
         active.forEach((ci,ai) => {
           const ax = AXIS[cands[ci].partyId] || 0;
           f[ai][0] += (ax*0.7 - pos[ai][0]) * axisStrength;
@@ -1948,7 +1960,7 @@ function buildTSNE() {
 
         // Gravity toward center: x+y on mobile (prevents blocs drifting), y only on desktop
         const gx = 0.0;
-        const gy = 0.01;
+        const gy = nParties <= 2 ? 0.06 : 0.01;
         for (let ai=0;ai<na;ai++) {
           if (gx) f[ai][0]-=pos[ai][0]*gx;
           f[ai][1]-=pos[ai][1]*gy;
